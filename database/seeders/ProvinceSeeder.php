@@ -17,15 +17,42 @@ class ProvinceSeeder extends Seeder
      */
     public function run()
     {
-        $provinces = RajaOngkir::provinsi()->all();
+        $fakeProvinces = [
+            [
+                'province_id' => 1,
+                'province' => 'Bali',
+                'cities' => [
+                    [
+                        'city_name' => 'Denpasar',
+                        'type' => 'Kota',
+                        'postal_code' => '80111'
+                    ]
+                ]
+            ],
+            [
+                'province_id' => 2,
+                'province' => 'Jawa Timur',
+                'cities' => [
+                    [
+                        'city_name' => 'Surabaya',
+                        'type' => 'Kota',
+                        'postal_code' => '60111'
+                    ],
+                    [
+                        'city_name' => 'Malang',
+                        'type' => 'Kota',
+                        'postal_code' => '65111'
+                    ]
+                ]
+            ]
+        ];
 
-        foreach ($provinces as $province) {
+        foreach ($fakeProvinces as $province) {
             $provinceResult = Province::create(['name' => $province['province']]);
 
-            $cities = RajaOngkir::kota()->dariProvinsi($province['province_id'])->get();
-            foreach ($cities as $city) {
+            foreach ($province['cities'] as $city) {
                 City::create([
-                    'province_id' => $provinceResult['id'],
+                    'province_id' => $provinceResult->id,
                     'name' => $city['city_name'],
                     'type' => $city['type'],
                     'postal_code' => $city['postal_code']
