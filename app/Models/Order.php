@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\OrderItem;
 
 class Order extends Model
 {
@@ -39,6 +40,14 @@ class Order extends Model
             ->withPivot(['quantity', 'total_price'])
             ->withTimestamps();
     }
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 
     /**
      * get the total price products that belong to the order
@@ -71,10 +80,26 @@ class Order extends Model
     {
         $result = $this->where($this->getRouteKeyName(), $value);
 
-        if (request()->is('api/merchant/*')) $result->whereHas('products', fn ($query) => $query->where('merchant_account_id', request()->user()->merchantAccount->id));
+        if (request()->is('api/merchant/*')) {
+            $result->whereHas('products', function ($query) {
+                $query->where('merchant_account_id', request()->user()->merchantAccount->id);
+            });
+        }
 
-        if (request()->is('api/orders*')) $result->where('user_id', request()->user()->id);
+        if (request()->is('api/orders*')) {
+            $result->where('user_id', request()->user()->id);
+        }
 
+        if (request()->has('customer_id')) {
+            $result->where('customer_id', request('customer_id'));
+        }
+
+        $result->with('customer:id,name');
+
+        if (request()->has('status')) {
+            $result->where('status', request('status'));
+        }
         return $result->firstOrFail();
     }
+
 }
