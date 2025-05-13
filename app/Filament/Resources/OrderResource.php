@@ -10,6 +10,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Filters\SelectFilter;
 use App\Filament\Resources\OrderResource\Pages;
+use Filament\Tables\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 
 class OrderResource extends Resource
 {
@@ -23,10 +26,26 @@ class OrderResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                //
-            ]);
+        return $form->schema([
+            TextInput::make('coupons')
+                ->required()
+                ->label('Coupons'),
+            TextInput::make('courier_services')
+                ->required()
+                ->label('Courier Services'),
+            TextInput::make('total_price')
+                ->numeric()
+                ->label('Total Price'),
+
+            Select::make('status')
+                ->options([
+                    'SUCCESS' => 'Success',
+                    'FAILED' => 'Failed',
+                    'PENDING' => 'Pending',
+                    'IN_CART' => 'In Cart',
+                ])
+                ->required(),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -40,6 +59,11 @@ class OrderResource extends Resource
                     ->searchable(),
                 TextColumn::make('total_price')
                     ->formatStateUsing(fn (int $state): string => currencyFormat($state)),
+                TextColumn::make('coupons')
+                    ->label('Coupons'),
+
+                TextColumn::make('courier_services')
+                    ->label('Courier Services'),
                 BadgeColumn::make('status')
                     ->enum([
                         'SUCCESS' => 'Success',
@@ -53,6 +77,13 @@ class OrderResource extends Resource
                         'primary' => 'PENDING',
                         'secondary' => 'IN_CART'
                     ]),
+                TextColumn::make('created_at')
+                    ->label('Created At')
+                    ->dateTime('Y-m-d H:i'),
+
+                TextColumn::make('updated_at')
+                    ->label('Updated At')
+                    ->dateTime('Y-m-d H:i'),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -62,6 +93,9 @@ class OrderResource extends Resource
                         'PENDING' => 'Pending',
                         'IN_CART' => 'In Cart'
                     ])
+            ])
+            ->actions([
+                EditAction::make(),
             ]);
     }
 
@@ -70,6 +104,8 @@ class OrderResource extends Resource
     {
         return [
             'index' => Pages\ListOrders::route('/'),
+            'edit' => Pages\EditOrder::route('/{record}/edit'),
+            'create' => Pages\CreateOrder::route('/create'),
         ];
     }
 }
